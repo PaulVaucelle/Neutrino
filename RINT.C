@@ -74,7 +74,7 @@
         /**Const term computation*/
         for (int r=0;r<Nbcore;r++)/*sum over the cores*/
             {
-            Const[r]= Gth[r]*1/(Sumfiei)*TimeConverter*6.42*pow(10,+12)/(4*4*atan(1.0)*baseline[r]*baseline[r]*(10^4))*epsilon*Np;/*Units correction L in cm*/
+            Const[r]= Gth[r]*1/(Sumfiei)*TimeConverter*6.42*pow(10,+12)/(4*4*atan(1.0)*baseline[r]*baseline[r]*(1e4))*epsilon*Np;/*Units correction L in cm*/
 
             /*For the Phi, the fission fraction are respectively: 235U, 239Pu, 238U and 241Pu*/
             E[i+1]=E[i]+pas;/*Neutrino energy incresed by a bin*/
