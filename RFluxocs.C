@@ -139,8 +139,9 @@
             F12[i]=X[i]*Phi[i]*(1-P21[i]);/*No Mass Ordering part*/
             IF321[i]=X[i]*Phi[i]*IP321[i];/* Inverted Hierarchy*/
             hist->Fill(E[i],F321[i]);
-            F321res[i]=F321[i]*Eres[i];
+            F321res[i]=F321[i]*ROOT::Math::gaussian_pdf(E[i],0.03*sqrt(E[i]),E[i+1]/2+E[i]/2);
             ey[i]=0;
+
         }
     /*hist->Draw("HIST SAME C");*/
     double scale= 1/hist->Integral();
@@ -166,8 +167,8 @@
     /* Neutrino spectrum as a function of E*/
     
     TCanvas *c1 = new TCanvas("c1","First Graph",200,10,600,400);
-    TGraph *gr1 = new TGraph(m,Evis,F321);/* don't use small bin number*/
-    TGraph *gr8 = new TGraph(m,Evis,IF321);/* don't use small bin number*/
+    TGraph *gr1 = new TGraph(m,Evis,F321res);/* don't use small bin number*/
+    TGraph *gr8 = new TGraph(m,Evis,F321);/* don't use small bin number*/
     gr1->SetLineColor(4);
     gr1->SetTitle("Observed neutrino spectrum with oscillations");
     gr1->GetXaxis()->SetTitle("Visible Energy (MeV)");
@@ -175,6 +176,12 @@
     
     gr1->Draw("AL");
     gr8->Draw("L"); /* ACTIVATE/DESACVTIVATE*/
+
+    auto legend3 = new TLegend(0.9,0.75,0.7,0.9);/*(gap from left,Gap from the bottom,percentage width filled,gap fro mtop?)*/
+    legend3->SetHeader("Legend","C"); /*C to center the title*/
+    legend3->AddEntry(gr1,"With energy resolution");
+    legend3->AddEntry(gr8,"without");
+    legend3->Draw();/* ACTIVATE/DESACVTIVATE*/
 
     /*Neutrino spectrum as a function of L/E*/
 
@@ -231,6 +238,5 @@
     legend2->AddEntry(gr9,"IH with energy resolution");
     legend2->Draw();
 
-    /*double Ip= gr1->Integral(0,-1);
-    printf(" IP with Tgraph method : %f \n",Ip);*/
+
 }
