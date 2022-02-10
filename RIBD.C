@@ -8,7 +8,7 @@
     #include <TGraph.h>
     
     
-    #define m 50
+    #define m 200
     #define Nbcore 10
     /*Needed parameters*/
 
@@ -99,6 +99,7 @@
     double epsilon = 1;
     double SiX[m];
     double Const[Nbcore];
+    double ItotE[m];
 
     int TimeConverter = 60*60*24;
     /*COmputation of the number of protons*/
@@ -124,15 +125,15 @@
     fa3->SetParameter(4,fi241Pu);
     fa3->SetParameter(5,D);
     fa3->SetParameter(6,m_e);
-    fa3->SetTitle("function to integrate wrt the neutrino energy");
-    fa3->GetXaxis()->SetTitle("Energy of the Neutrino (MeV)");
-    fa3->GetYaxis()->SetTitle("Integrated function");
-    fa3->Draw();
+    // fa3->SetTitle("function to integrate wrt the neutrino energy");
+    // fa3->GetXaxis()->SetTitle("Energy of the Neutrino (MeV)");
+    // fa3->GetYaxis()->SetTitle("Integrated function");
+    // fa3->Draw();
 
     /*Proba computation*/
     E[0]=Emin;
     TH1F *hist = new TH1F("hist", "Histogram",m,2.00,8.21);
-    TCanvas *c5 = new TCanvas();
+    // TCanvas *c5 = new TCanvas();
     for (int i=0;i<m;i++)
         {
             
@@ -177,16 +178,17 @@
             F321[i]=X[i]*Phi[i]*P321[i]; /* Taking into account small oscillation => Mass Ordering differentiation*/
             F12[i]=X[i]*Phi[i]*(1-P21[i]);/*No Mass Ordering part*/
             IF321[i]=X[i]*Phi[i]*IP321[i];/* Inverted Hierarchy*/
+            
+            F321res[i]=F321[i]*ROOT::Math::gaussian_pdf(E[i],0.03*sqrt(E[i]),E[i+1]/2+E[i]/2);
             hist->Fill(E[i],F321[i]);
-            F321res[i]=F321[i]*Eres[i];
             ey[i]=0;
         }
     /*hist->Draw("HIST SAME C");*/
     // double scale= 1/hist->Integral();
-    hist->GetXaxis()->SetTitle("Neutrino Energy MeV");
-    hist->GetYaxis()->SetTitle("Neutrino Spectra");
-    hist->SetFillColor(kBlue-7);
-    hist->Draw("H");
+    // hist->GetXaxis()->SetTitle("Neutrino Energy MeV");
+    // hist->GetYaxis()->SetTitle("Neutrino Spectra");
+    // hist->SetFillColor(kBlue-7);
+    // hist->Draw("H");
  
     /*TGraph part*/
 
@@ -200,7 +202,8 @@
             LER[j]=Mbaseline/E[j];
             
         }
-        
+    TH1F *hist2 = new TH1F("hist2", "Histogram",m,1.00,10.00);
+    TCanvas *c6 = new TCanvas();
         for (int b=0;b<m;b++)
         /*sums over bins*/         
             {for (int r=0;r<Nbcore;r++)
@@ -213,31 +216,39 @@
                 SiX[b]= fa3->Integral(E[b],E[b+1],1e-12);
 
                 /*printf("E[b] = %f  E[b+1] = %f \n",E[b],E[b+1]);*/
+                ItotE[b]=Const[r]*SiX[b]*P321[b];
                 Itot=Itot+Const[r]*SiX[b]*P321[b];/* sum all over the bins*//*13.5*//*Doesn't take into accout the oscillations*/
+                hist2->Fill(Evis[b],ItotE[b]);
                 }
             }
- 
-    TCanvas *c3 = new TCanvas("c3","Integrated function",200,10,600,400);
-    TGraph *gr6 = new TGraph(m,E,SiX);/*Si on trace I, on retrouve la forme caluler pour F1 dans le code RFluxocs.C*/
+     /*hist->Draw("HIST SAME C");*/
+    double scale= 1/hist2->Integral();
+    hist2->GetXaxis()->SetTitle("Neutrion visible energy");
+    hist2->GetYaxis()->SetTitle("IBD events per day");
+    hist2->SetFillColor(kBlue-7);
+    hist2->Draw("H");
+
+    TCanvas *c3 = new TCanvas("c3","Ibd events per day as a function of energy",200,10,600,400);
+    TGraph *gr6 = new TGraph(m,Evis,ItotE);/*Si on trace I, on retrouve la forme caluler pour F1 dans le code RFluxocs.C*/
     gr6->SetLineColor(6);
-    gr6->SetTitle("Integrated function");
+    gr6->SetTitle("IBD events per day as a function of the energy");
     gr6->GetXaxis()->SetTitle("Energy of the Neutrino (MeV)");
-    gr6->GetYaxis()->SetTitle("Integrated function");
+    gr6->GetYaxis()->SetTitle("Ibd events per day");
     gr6->Draw("AL");
     printf("Itot = %f \n",Itot);
     
     /* Neutrino spectrum as a function of E*/
     
-    TCanvas *c1 = new TCanvas("c1","First Graph",200,10,600,400);
-    TGraph *gr1 = new TGraph(m,Evis,F321);/* don't use small bin number*/
-    TGraph *gr8 = new TGraph(m,Evis,IF321);/* don't use small bin number*/
-    gr1->SetLineColor(4);
-    gr1->SetTitle("Observed neutrino spectrum with oscillations");
-    gr1->GetXaxis()->SetTitle("Visible Energy (MeV)");
-    gr1->GetYaxis()->SetTitle("Neutrino flux * Xsection * Probability (cm2/MeV/fisson)");
+    // TCanvas *c1 = new TCanvas("c1","First Graph",200,10,600,400);
+    // TGraph *gr1 = new TGraph(m,Evis,F321);/* don't use small bin number*/
+    // TGraph *gr8 = new TGraph(m,Evis,IF321);/* don't use small bin number*/
+    // gr1->SetLineColor(4);
+    // gr1->SetTitle("Observed neutrino spectrum with oscillations");
+    // gr1->GetXaxis()->SetTitle("Visible Energy (MeV)");
+    // gr1->GetYaxis()->SetTitle("Neutrino flux * Xsection * Probability (cm2/MeV/fisson)");
     
-    gr1->Draw("AL");
-    gr8->Draw("L"); /* ACTIVATE/DESACVTIVATE*/
+    // gr1->Draw("AL");
+    // gr8->Draw("L"); /* ACTIVATE/DESACVTIVATE*/
 
     /*Neutrino spectrum as a function of L/E*/
 
@@ -279,8 +290,8 @@
     legend->Draw();/* ACTIVATE/DESACVTIVATE*/
 
     TCanvas *c4 = new TCanvas("c4","Fourth Graph",200,10,600,400);
-    auto gr = new TGraph(m,Evis,F321);/*use small bin number defined by the constaint of nergy resolution*/
-    TGraph *gr9 = new TGraph(m,Evis,IF321);
+    auto gr = new TGraph(m,Evis,F321res);/*F321*//*use small bin number defined by the constaint of nergy resolution*/
+    TGraph *gr9 = new TGraph(m,Evis,F321);/*IF321*/
     gr->SetTitle("Observed Neutrino Spectrum with oscillations");
     gr->GetXaxis()->SetTitle("Visible Energy(MeV)");
     gr->GetYaxis()->SetTitle("Observed Neutrino Spectrum with oscillations");
@@ -291,6 +302,6 @@
     auto legend2 = new TLegend(0.9,0.75,0.7,0.9);/*(gap from left,Gap from the bottom,percentage width filled,gap fro mtop?)*/
     legend2->SetHeader("Legend","C"); /*C to center the title*/
     legend2->AddEntry(gr,"NH with Energy resolution");
-    legend2->AddEntry(gr9,"IH with energy resolution");
+    legend2->AddEntry(gr9,"NH without energy resolution");
     legend2->Draw();
 }
